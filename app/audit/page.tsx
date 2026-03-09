@@ -43,7 +43,7 @@ function CategoryCard({ title, icon, score, issues, details }: { title: string, 
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="bg-cl-card border border-cl-border rounded-2xl p-6 hover:border-cl-orange/20 transition-colors">
+    <div className="bg-cl-card border border-cl-border rounded-2xl p-6 hover:border-cl-cyan/20 transition-colors">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <span className="text-2xl">{icon}</span>
@@ -62,7 +62,7 @@ function CategoryCard({ title, icon, score, issues, details }: { title: string, 
             </div>
           ))}
           {issues.length > 3 && (
-            <button onClick={() => setOpen(!open)} className="text-cl-orange text-sm hover:underline">
+            <button onClick={() => setOpen(!open)} className="text-cl-cyan text-sm hover:underline">
               {open ? 'Show less' : `+ ${issues.length - 3} more issues`}
             </button>
           )}
@@ -155,13 +155,13 @@ export default function AuditReport() {
   if (!result) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-2 border-cl-orange border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-2 border-cl-cyan border-t-transparent rounded-full"></div>
       </div>
     )
   }
 
   const gradeLabel = result.overallScore >= 90 ? 'A+' : result.overallScore >= 80 ? 'A' : result.overallScore >= 70 ? 'B' : result.overallScore >= 60 ? 'C' : result.overallScore >= 50 ? 'D' : 'F'
-  const gradeColor = result.overallScore >= 80 ? 'text-cl-green' : result.overallScore >= 60 ? 'text-cl-yellow' : result.overallScore >= 40 ? 'text-cl-orange' : 'text-cl-red'
+  const gradeColor = result.overallScore >= 80 ? 'text-cl-green' : result.overallScore >= 60 ? 'text-cl-yellow' : result.overallScore >= 40 ? 'text-cl-cyan' : 'text-cl-red'
 
   return (
     <main className="min-h-screen pb-20">
@@ -178,7 +178,7 @@ export default function AuditReport() {
             <button
               onClick={handleDownloadPDF}
               disabled={downloading}
-              className="px-4 py-2 rounded-lg bg-cl-orange hover:bg-cl-orange-dark text-white text-sm font-semibold transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-cl-cyan hover:bg-cl-cyan-dark text-white text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {downloading ? 'Generating...' : '📄 Download PDF'}
             </button>
@@ -256,7 +256,7 @@ export default function AuditReport() {
                   <span className="text-cl-muted text-xs font-mono">{rec.category}</span>
                 </div>
                 <p className="text-cl-muted text-sm mb-2">{rec.description}</p>
-                <p className="text-cl-orange text-sm font-medium">💡 {rec.impact}</p>
+                <p className="text-cl-cyan text-sm font-medium">💡 {rec.impact}</p>
               </div>
             ))}
           </div>
@@ -275,7 +275,7 @@ export default function AuditReport() {
               href="https://coldlava.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex px-8 py-4 rounded-xl bg-cl-orange hover:bg-cl-orange-dark text-white font-semibold transition-colors text-lg"
+              className="inline-flex px-8 py-4 rounded-xl bg-cl-cyan hover:bg-cl-cyan-dark text-white font-semibold transition-colors text-lg"
             >
               Book a Free Strategy Call →
             </a>

@@ -84,7 +84,7 @@ export default function Home() {
           {/* Headline */}
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 fade-in fade-in-delay-1">
             Your website is losing you{' '}
-            <span className="text-cl-orange">money.</span>
+            <span className="text-cl-cyan">money.</span>
           </h1>
           <p className="text-lg text-cl-muted mb-10 max-w-lg mx-auto fade-in fade-in-delay-2">
             Get a comprehensive analysis of your website performance, online reviews, 
@@ -99,13 +99,13 @@ export default function Home() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Enter website URL (e.g. acmeplumbing.com)"
-                className="flex-1 px-5 py-4 rounded-xl bg-cl-card border border-cl-border text-white placeholder-cl-muted focus:outline-none focus:border-cl-orange transition-colors text-base"
+                className="flex-1 px-5 py-4 rounded-xl bg-cl-card border border-cl-border text-white placeholder-cl-muted focus:outline-none focus:border-cl-cyan transition-colors text-base"
                 disabled={loading}
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="px-8 py-4 rounded-xl bg-cl-orange hover:bg-cl-orange-dark text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="px-8 py-4 rounded-xl bg-cl-cyan hover:bg-cl-cyan-light text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function Home() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Your email (optional — to receive the PDF)"
-              className="w-full mt-3 px-5 py-3 rounded-xl bg-cl-card border border-cl-border text-white placeholder-cl-muted focus:outline-none focus:border-cl-orange/50 transition-colors text-sm"
+              className="w-full mt-3 px-5 py-3 rounded-xl bg-cl-card border border-cl-border text-white placeholder-cl-muted focus:outline-none focus:border-cl-cyan/50 transition-colors text-sm"
               disabled={loading}
             />
 
@@ -160,7 +160,7 @@ export default function Home() {
               { icon: '🛡️', label: 'Trust Signals', desc: 'Credibility gaps' },
               { icon: '📊', label: 'vs Competitors', desc: 'Market positioning' },
             ].map((item) => (
-              <div key={item.label} className="p-4 rounded-xl border border-cl-border bg-cl-card hover:border-cl-orange/30 transition-colors">
+              <div key={item.label} className="p-4 rounded-xl border border-cl-border bg-cl-card hover:border-cl-cyan/30 transition-colors">
                 <div className="text-2xl mb-2">{item.icon}</div>
                 <div className="text-white font-semibold text-sm">{item.label}</div>
                 <div className="text-cl-muted text-xs">{item.desc}</div>

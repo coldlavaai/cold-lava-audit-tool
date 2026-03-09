@@ -1,8 +1,6 @@
 # Cold Lava Audit Tool - Design Implementation
 
-⚠️ **NOTE:** This tool uses **ORANGE** as the primary accent, which is for client-facing tools only.
-
-**Cold Lava branded materials use CYAN (#06B6D4).** See the main design system for branded work.
+This tool follows the **Cold Lava Design System v2.0** — fully branded with CYAN accent.
 
 📖 **Full Design System Documentation:**
 https://github.com/coldlavaai/cold-lava-platform/blob/main/DESIGN-SYSTEM.md
@@ -12,10 +10,11 @@ https://github.com/coldlavaai/cold-lava-platform/blob/main/DESIGN-SYSTEM.md
 ## Implementation Checklist
 
 ✅ **Colors**
-- Dark theme (#050505 background)
-- Orange CTAs (#ff6b35)
+- Dark theme (#030305 background)
+- Cyan CTAs (#06B6D4)
 - Card backgrounds (#111111)
 - Border color (#1a1a1a)
+- Grain overlay texture
 
 ✅ **Typography**
 - Primary: Inter
@@ -59,19 +58,19 @@ https://github.com/coldlavaai/cold-lava-platform/blob/main/DESIGN-SYSTEM.md
 
 ### Color Palette
 ```css
-bg-cl-darker    #050505  /* Page background */
+bg-cl-bg        #030305  /* Page background */
 bg-cl-card      #111111  /* Cards */
 border-cl-border #1a1a1a /* Borders */
-text-cl-orange  #ff6b35  /* Primary action */
-text-white      #e5e5e5  /* Primary text */
-text-cl-muted   #9ca3af  /* Secondary text */
+text-cl-cyan    #06B6D4  /* Primary action */
+text-white      #FFFFFF  /* Primary text */
+text-cl-muted   #86868B  /* Secondary text */
 ```
 
 ### Common Patterns
 
 **Primary Button:**
 ```tsx
-<button className="px-8 py-4 rounded-xl bg-cl-orange hover:bg-cl-orange-dark 
+<button className="px-8 py-4 rounded-xl bg-cl-cyan hover:bg-cl-cyan-light 
                    text-white font-semibold transition-all">
   Run Free Audit
 </button>
@@ -80,7 +79,7 @@ text-cl-muted   #9ca3af  /* Secondary text */
 **Card:**
 ```tsx
 <div className="p-6 rounded-xl border border-cl-border bg-cl-card 
-                hover:border-cl-orange/30 transition-colors">
+                hover:border-cl-cyan/30 transition-colors">
   {/* content */}
 </div>
 ```
