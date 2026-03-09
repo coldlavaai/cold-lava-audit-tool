@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
+import * as cheerio from 'cheerio'
 
 export const maxDuration = 60
 
@@ -94,23 +93,23 @@ interface Recommendation {
   impact: string
 }
 
-async function getBrowserInstance() {
-  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    const executablePath = await chromium.executablePath()
-    console.log('Chromium path:', executablePath)
-    return puppeteer.launch({
-      args: [...chromium.args, '--disable-dev-shm-usage'],
-      defaultViewport: { width: 1920, height: 1080 },
-      executablePath,
-      headless: true,
+async function fetchWithTimeout(url: string, timeout = 15000): Promise<Response> {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), timeout)
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      redirect: 'follow',
     })
-  } else {
-    // Local development - use system Chrome
-    return puppeteer.launch({
-      headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    })
+    clearTimeout(id)
+    return response
+  } catch (e) {
+    clearTimeout(id)
+    throw e
   }
 }
 
@@ -322,7 +321,6 @@ function generateRecommendations(website: WebsiteScore, reviews: ReviewScore, tr
 }
 
 export async function POST(req: NextRequest) {
-  let browser
   try {
     const { url, email } = await req.json()
 
@@ -337,76 +335,38 @@ export async function POST(req: NextRequest) {
 
     const isSSL = targetUrl.startsWith('https')
 
-    // Launch browser
-    try {
-      browser = await getBrowserInstance()
-    } catch (browserError: any) {
-      console.error('Browser launch failed:', browserError)
-      return NextResponse.json({ error: 'Browser initialization failed. Please try again.' }, { status: 500 })
-    }
-    
-    const page = await browser.newPage()
-    await page.setViewport({ width: 1920, height: 1080 })
-
-    // Navigate and wait for page to fully render
+    // Fetch the website
     const startTime = Date.now()
+    let response: Response
     try {
-      await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+      response = await fetchWithTimeout(targetUrl)
     } catch (e: any) {
-      if (!isSSL) {
-        await browser.close()
-        return NextResponse.json({ error: 'Could not reach this website. Please check the URL and try again.' }, { status: 400 })
-      }
-      // Try HTTP
+      // Try http if https fails
       try {
         targetUrl = targetUrl.replace('https://', 'http://')
-        await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+        response = await fetchWithTimeout(targetUrl)
       } catch {
-        await browser.close()
         return NextResponse.json({ error: 'Could not reach this website. Please check the URL and try again.' }, { status: 400 })
       }
     }
-
     const loadTime = Date.now() - startTime
+    const html = await response.text()
 
-    // Scroll to load lazy content
-    await page.evaluate(async () => {
-      await new Promise((resolve) => {
-        let totalHeight = 0
-        const distance = 100
-        const timer = setInterval(() => {
-          const scrollHeight = document.body.scrollHeight
-          window.scrollBy(0, distance)
-          totalHeight += distance
-          if (totalHeight >= scrollHeight) {
-            clearInterval(timer)
-            resolve(null)
-          }
-        }, 100)
-      })
-    })
+    // Parse with Cheerio
+    const $ = cheerio.load(html)
+    const bodyText = $('body').text()
 
-    // Wait for chat widgets and dynamic content to load (many load on a delay)
-    await new Promise(resolve => setTimeout(resolve, 3000))
-
-    // Get fully rendered HTML and text content
-    const html = await page.content()
-    const bodyText = await page.evaluate(() => document.body.innerText || '')
-    
-    // Also check for chat widget scripts and iframes
-    const hasIntercomScript = await page.evaluate(() => !!document.querySelector('script[src*="intercom"]'))
-    const hasDriftScript = await page.evaluate(() => !!document.querySelector('script[src*="drift"]'))
-    const hasTidioScript = await page.evaluate(() => !!document.querySelector('script[src*="tidio"]'))
-    const hasChatIframe = await page.evaluate(() => !!document.querySelector('iframe[src*="chat"], iframe[title*="chat" i], iframe[id*="chat" i]'))
-    const scriptBasedChatDetected = hasIntercomScript || hasDriftScript || hasTidioScript || hasChatIframe
+    // Check for chat widget scripts and iframes in HTML
+    const scriptBasedChatDetected = 
+      html.includes('intercom') || 
+      html.includes('drift') || 
+      html.includes('tidio') ||
+      $('iframe[src*="chat"], iframe[title*="chat" i], iframe[id*="chat" i]').length > 0
 
     // Extract business name
-    const titleTag = await page.title()
-    const ogTitle = await page.$eval('meta[property="og:title"]', (el) => el.getAttribute('content')).catch(() => '')
+    const titleTag = $('title').first().text().trim()
+    const ogTitle = $('meta[property="og:title"]').attr('content') || ''
     const businessName = ogTitle || titleTag || new URL(targetUrl).hostname
-
-    await browser.close()
-    browser = null
 
     // Run all analyses
     const website = analyzeWebsite(html, targetUrl, loadTime, isSSL)
@@ -440,7 +400,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result)
   } catch (error: any) {
     console.error('Audit error:', error)
-    if (browser) await browser.close()
     return NextResponse.json({ error: 'Failed to analyze website. Please try again.' }, { status: 500 })
   }
 }
