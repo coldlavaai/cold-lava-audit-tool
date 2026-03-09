@@ -168,12 +168,23 @@ function analyzeReviews(html: string, bodyText: string): ReviewScore {
   const lowerBody = bodyText.toLowerCase()
   const lowerHtml = html.toLowerCase()
 
-  const hasTestimonials = lowerBody.includes('testimonial') || lowerBody.includes('what our') || lowerBody.includes('client say') || lowerBody.includes('customer review') || /class=["'][^"']*testimonial/i.test(html)
-  const hasReviewWidgets = lowerHtml.includes('trustpilot') || lowerHtml.includes('google review') || lowerHtml.includes('yelp') || /<iframe[^>]+src=["'][^"']*(google|yelp|trustpilot)/i.test(html)
+  // More comprehensive testimonial detection
+  const testimonialPatterns = [
+    'testimonial', 'what our', 'client say', 'customer say', 'customer review',
+    'client review', 'customer feedback', 'hear from', 'words from',
+    'loved working with', 'highly recommend', 'excellent service',
+    'great experience', 'would recommend', 'very professional',
+    'amazing', 'fantastic', 'brilliant', 'outstanding',
+    /customer[^.]{0,50}said/i.test(bodyText),
+    /client[^.]{0,50}said/i.test(bodyText),
+  ]
+  const hasTestimonials = testimonialPatterns.some(p => typeof p === 'string' ? lowerBody.includes(p) : p) || /class=["'][^"']*testimonial/i.test(html) || /class=["'][^"']*review/i.test(html)
+  
+  const hasReviewWidgets = lowerHtml.includes('trustpilot') || lowerHtml.includes('google review') || lowerHtml.includes('yelp') || /<iframe[^>]+src=["'][^"']*(google|yelp|trustpilot|reviews)/i.test(html) || lowerHtml.includes('reviews.io')
   const mentionsGoogle = lowerBody.includes('google') && (lowerBody.includes('review') || lowerBody.includes('rating') || lowerBody.includes('star'))
   const mentionsYelp = lowerBody.includes('yelp')
   const hasCaseStudies = lowerBody.includes('case stud') || lowerBody.includes('success stor')
-  const hasStarRatings = /class=["'][^"']*star/i.test(html) || /class=["'][^"']*rating/i.test(html) || bodyText.includes('★') || bodyText.includes('⭐')
+  const hasStarRatings = /class=["'][^"']*star/i.test(html) || /class=["'][^"']*rating/i.test(html) || bodyText.includes('★') || bodyText.includes('⭐') || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(bodyText)
 
   const issues: string[] = []
   let score = 100
@@ -200,7 +211,18 @@ function analyzeTrustSignals(html: string, bodyText: string): TrustScore {
 
   const hasPhone = /(\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/.test(bodyText) || /<a[^>]+href=["']tel:/i.test(html)
   const hasEmail = /<a[^>]+href=["']mailto:/i.test(html) || /[\w.-]+@[\w.-]+\.\w+/.test(bodyText)
-  const hasAddress = lowerBody.includes('address') || lowerBody.includes('street') || lowerBody.includes('suite') || /\d+\s+[\w\s]+(?:st|ave|blvd|rd|dr|ln|way|ct|street|avenue|boulevard|road|drive|lane|court)/i.test(bodyText)
+  // More comprehensive address detection
+  const addressPatterns = [
+    lowerBody.includes('address'),
+    lowerBody.includes('street'),
+    lowerBody.includes('suite'),
+    lowerBody.includes('office'),
+    /\d+\s+[\w\s]+(?:st|ave|blvd|rd|dr|ln|way|ct|street|avenue|boulevard|road|drive|lane|court)/i.test(bodyText),
+    /\b(?:road|street|avenue|lane|drive|close|way|place|crescent)\b/i.test(lowerBody) && /\d{1,5}/.test(bodyText), // UK/US style
+    /[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2}/i.test(bodyText), // UK postcode
+    /\d{5}(-\d{4})?/.test(bodyText) && (lowerBody.includes('zip') || lowerBody.includes('postal')), // US ZIP
+  ]
+  const hasAddress = addressPatterns.some(p => p)
   const hasAboutPage = /<a[^>]+href=["'][^"']*about/i.test(html)
   const hasPrivacyPolicy = /<a[^>]+href=["'][^"']*privacy/i.test(html)
   const hasTerms = /<a[^>]+href=["'][^"']*(terms|tos)/i.test(html)
@@ -240,7 +262,13 @@ function analyzeCompetitive(html: string, bodyText: string): CompetitiveScore {
   const hasCTA = ctaElements > 0 || ctaText > 0
   const ctaCount = Math.max(ctaElements, ctaText)
   
-  const hasLiveChat = lowerHtml.includes('livechat') || lowerHtml.includes('intercom') || lowerHtml.includes('drift') || lowerHtml.includes('tawk') || lowerHtml.includes('zendesk') || lowerHtml.includes('crisp') || lowerHtml.includes('hubspot') || /class=["'][^"']*chat/i.test(html)
+  // Comprehensive live chat detection
+  const chatKeywords = ['livechat', 'intercom', 'drift', 'tawk', 'zendesk', 'crisp', 'hubspot', 'tidio', 'olark', 'userlike', 'liveperson', 'purechat', 'chatwoot']
+  const chatPhrases = ['talk to', 'chat with', 'message us', 'live chat', 'chat now', 'start chat', 'need help', 'ask us', 'speak with', 'contact us online', 'chat to', 'message our']
+  const hasChatKeyword = chatKeywords.some(kw => lowerHtml.includes(kw))
+  const hasChatPhrase = chatPhrases.some(phrase => lowerBody.includes(phrase))
+  const hasChatClass = /class=["'][^"']*chat/i.test(html) || /id=["'][^"']*chat/i.test(html)
+  const hasLiveChat = hasChatKeyword || hasChatPhrase || hasChatClass
   const hasVideoContent = /<video/i.test(html) || /<iframe[^>]+src=["'][^"']*(youtube|vimeo|wistia)/i.test(html)
   const hasFAQ = lowerBody.includes('faq') || lowerBody.includes('frequently asked') || lowerBody.includes('common question')
   const hasPortfolio = lowerBody.includes('portfolio') || lowerBody.includes('our work') || lowerBody.includes('project') || lowerBody.includes('gallery')
