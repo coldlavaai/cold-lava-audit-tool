@@ -264,10 +264,11 @@ function analyzeCompetitive(html: string, bodyText: string, scriptBasedChatDetec
   
   // Comprehensive live chat detection
   const chatKeywords = ['livechat', 'intercom', 'drift', 'tawk', 'zendesk', 'crisp', 'hubspot', 'tidio', 'olark', 'userlike', 'liveperson', 'purechat', 'chatwoot']
-  const chatPhrases = ['talk to', 'chat with', 'message us', 'live chat', 'chat now', 'start chat', 'need help', 'ask us', 'speak with', 'contact us online', 'chat to', 'message our']
+  const chatPhrases = ['talk to', 'chat with', 'message us', 'live chat', 'chat now', 'start chat', 'need help', 'ask us', 'speak with', 'contact us online', 'chat to', 'message our', 'speak to']
   const hasChatKeyword = chatKeywords.some(kw => lowerHtml.includes(kw))
-  const hasChatPhrase = chatPhrases.some(phrase => lowerBody.includes(phrase))
-  const hasChatClass = /class=["'][^"']*chat/i.test(html) || /id=["'][^"']*chat/i.test(html)
+  // Check BOTH body text AND html content for chat phrases
+  const hasChatPhrase = chatPhrases.some(phrase => lowerBody.includes(phrase) || lowerHtml.includes(phrase))
+  const hasChatClass = /class=["'][^"']*chat/i.test(html) || /id=["'][^"']*chat/i.test(html) || /aria-label=["'][^"']*chat/i.test(html)
   const hasLiveChat = scriptBasedChatDetected || hasChatKeyword || hasChatPhrase || hasChatClass
   const hasVideoContent = /<video/i.test(html) || /<iframe[^>]+src=["'][^"']*(youtube|vimeo|wistia)/i.test(html)
   const hasFAQ = lowerBody.includes('faq') || lowerBody.includes('frequently asked') || lowerBody.includes('common question')
