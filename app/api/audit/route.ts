@@ -182,6 +182,9 @@ function analyzeReviews(html: string, bodyText: string): ReviewScore {
   const hasTestimonialKeyword = testimonialKeywords.some(kw => lowerBody.includes(kw) || lowerHtml.includes(kw))
   const hasTestimonialClass = /class=["'][^"']*(testimonial|review|feedback)/i.test(html)
   
+  // Check for links to testimonials/reviews pages (indicates they have social proof on dedicated page)
+  const hasTestimonialLink = /<a[^>]+href=["'][^"']*(testimonial|review|feedback|customer|client)[^"']*["']/i.test(html)
+  
   const hasReviewWidgets = lowerHtml.includes('trustpilot') || lowerHtml.includes('google review') || lowerHtml.includes('yelp') || /<iframe[^>]+src=["'][^"']*(google|yelp|trustpilot|reviews)/i.test(html) || lowerHtml.includes('reviews.io')
   const mentionsGoogle = (lowerBody.includes('google') || lowerHtml.includes('google')) && (lowerBody.includes('review') || lowerHtml.includes('review') || lowerBody.includes('rating') || lowerBody.includes('star'))
   const mentionsYelp = lowerBody.includes('yelp') || lowerHtml.includes('yelp')
@@ -189,7 +192,7 @@ function analyzeReviews(html: string, bodyText: string): ReviewScore {
   const hasStarRatings = /class=["'][^"']*star/i.test(html) || /class=["'][^"']*rating/i.test(html) || bodyText.includes('★') || bodyText.includes('⭐') || html.includes('★') || html.includes('⭐') || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(bodyText) || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(html)
   
   // Combine ALL forms of social proof - if they have ANY, they have testimonials
-  const hasTestimonials = hasTestimonialKeyword || hasTestimonialClass || hasReviewWidgets || hasCaseStudies || hasStarRatings
+  const hasTestimonials = hasTestimonialKeyword || hasTestimonialClass || hasTestimonialLink || hasReviewWidgets || hasCaseStudies || hasStarRatings
 
   const issues: string[] = []
   let score = 100
