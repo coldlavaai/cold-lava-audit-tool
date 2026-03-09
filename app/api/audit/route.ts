@@ -250,7 +250,7 @@ function analyzeTrustSignals(html: string, bodyText: string): TrustScore {
   }
 }
 
-function analyzeCompetitive(html: string, bodyText: string): CompetitiveScore {
+function analyzeCompetitive(html: string, bodyText: string, scriptBasedChatDetected: boolean = false): CompetitiveScore {
   const lowerBody = bodyText.toLowerCase()
   const lowerHtml = html.toLowerCase()
 
@@ -268,7 +268,7 @@ function analyzeCompetitive(html: string, bodyText: string): CompetitiveScore {
   const hasChatKeyword = chatKeywords.some(kw => lowerHtml.includes(kw))
   const hasChatPhrase = chatPhrases.some(phrase => lowerBody.includes(phrase))
   const hasChatClass = /class=["'][^"']*chat/i.test(html) || /id=["'][^"']*chat/i.test(html)
-  const hasLiveChat = hasChatKeyword || hasChatPhrase || hasChatClass
+  const hasLiveChat = scriptBasedChatDetected || hasChatKeyword || hasChatPhrase || hasChatClass
   const hasVideoContent = /<video/i.test(html) || /<iframe[^>]+src=["'][^"']*(youtube|vimeo|wistia)/i.test(html)
   const hasFAQ = lowerBody.includes('faq') || lowerBody.includes('frequently asked') || lowerBody.includes('common question')
   const hasPortfolio = lowerBody.includes('portfolio') || lowerBody.includes('our work') || lowerBody.includes('project') || lowerBody.includes('gallery')
@@ -373,9 +373,19 @@ export async function POST(req: NextRequest) {
       })
     })
 
+    // Wait for chat widgets and dynamic content to load (many load on a delay)
+    await new Promise(resolve => setTimeout(resolve, 3000))
+
     // Get fully rendered HTML and text content
     const html = await page.content()
     const bodyText = await page.evaluate(() => document.body.innerText || '')
+    
+    // Also check for chat widget scripts and iframes
+    const hasIntercomScript = await page.evaluate(() => !!document.querySelector('script[src*="intercom"]'))
+    const hasDriftScript = await page.evaluate(() => !!document.querySelector('script[src*="drift"]'))
+    const hasTidioScript = await page.evaluate(() => !!document.querySelector('script[src*="tidio"]'))
+    const hasChatIframe = await page.evaluate(() => !!document.querySelector('iframe[src*="chat"], iframe[title*="chat" i], iframe[id*="chat" i]'))
+    const scriptBasedChatDetected = hasIntercomScript || hasDriftScript || hasTidioScript || hasChatIframe
 
     // Extract business name
     const titleTag = await page.title()
@@ -389,7 +399,7 @@ export async function POST(req: NextRequest) {
     const website = analyzeWebsite(html, targetUrl, loadTime, isSSL)
     const reviews = analyzeReviews(html, bodyText)
     const trustSignals = analyzeTrustSignals(html, bodyText)
-    const competitive = analyzeCompetitive(html, bodyText)
+    const competitive = analyzeCompetitive(html, bodyText, scriptBasedChatDetected)
 
     const recommendations = generateRecommendations(website, reviews, trustSignals, competitive)
 
