@@ -1,1 +1,8 @@
-{"version": 2}
+{
+  "functions": {
+    "app/api/audit/route.ts": {
+      "maxDuration": 60,
+      "memory": 3008
+    }
+  }
+}

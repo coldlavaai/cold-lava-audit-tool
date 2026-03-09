@@ -95,11 +95,13 @@ interface Recommendation {
 }
 
 async function getBrowserInstance() {
-  if (process.env.VERCEL) {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    const executablePath = await chromium.executablePath()
+    console.log('Chromium path:', executablePath)
     return puppeteer.launch({
-      args: chromium.args,
+      args: [...chromium.args, '--disable-dev-shm-usage'],
       defaultViewport: { width: 1920, height: 1080 },
-      executablePath: await chromium.executablePath(),
+      executablePath,
       headless: true,
     })
   } else {
@@ -336,7 +338,13 @@ export async function POST(req: NextRequest) {
     const isSSL = targetUrl.startsWith('https')
 
     // Launch browser
-    browser = await getBrowserInstance()
+    try {
+      browser = await getBrowserInstance()
+    } catch (browserError: any) {
+      console.error('Browser launch failed:', browserError)
+      return NextResponse.json({ error: 'Browser initialization failed. Please try again.' }, { status: 500 })
+    }
+    
     const page = await browser.newPage()
     await page.setViewport({ width: 1920, height: 1080 })
 
