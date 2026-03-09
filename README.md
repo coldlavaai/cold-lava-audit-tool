@@ -6,13 +6,19 @@ Free website audit tool that analyzes performance, reviews, trust signals, and c
 
 ---
 
-## 🎨 Design System Compliance
+## 🎨 Design System
 
-This tool is the **reference implementation** for the [Cold Lava Design System v1.0](https://github.com/coldlavaai/cold-lava-platform/blob/main/DESIGN-SYSTEM.md).
+⚠️ **This tool uses ORANGE as the primary accent** (client-facing/generic appeal).
 
-All Cold Lava tools should follow this visual language.
+**Cold Lava branded materials use CYAN (#06B6D4).** See the [Cold Lava Design System](https://github.com/coldlavaai/cold-lava-platform/blob/main/DESIGN-SYSTEM.md) for branded work.
 
-See [DESIGN.md](./DESIGN.md) for implementation details.
+This tool demonstrates:
+- Dark theme architecture
+- Typography hierarchy
+- Component patterns
+- Animation approach
+
+But **NOT** the official Cold Lava brand colors. See [DESIGN.md](./DESIGN.md) for details.
 
 ---
 

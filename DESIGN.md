@@ -1,6 +1,8 @@
 # Cold Lava Audit Tool - Design Implementation
 
-This tool follows the **Cold Lava Design System v1.0**.
+⚠️ **NOTE:** This tool uses **ORANGE** as the primary accent, which is for client-facing tools only.
+
+**Cold Lava branded materials use CYAN (#06B6D4).** See the main design system for branded work.
 
 📖 **Full Design System Documentation:**
 https://github.com/coldlavaai/cold-lava-platform/blob/main/DESIGN-SYSTEM.md
