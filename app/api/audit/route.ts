@@ -168,23 +168,24 @@ function analyzeReviews(html: string, bodyText: string): ReviewScore {
   const lowerBody = bodyText.toLowerCase()
   const lowerHtml = html.toLowerCase()
 
-  // More comprehensive testimonial detection
-  const testimonialPatterns = [
+  // Check BOTH visible text AND full HTML (catches hidden/collapsed reviews)
+  const testimonialKeywords = [
     'testimonial', 'what our', 'client say', 'customer say', 'customer review',
     'client review', 'customer feedback', 'hear from', 'words from',
     'loved working with', 'highly recommend', 'excellent service',
     'great experience', 'would recommend', 'very professional',
-    'amazing', 'fantastic', 'brilliant', 'outstanding',
-    /customer[^.]{0,50}said/i.test(bodyText),
-    /client[^.]{0,50}said/i.test(bodyText),
+    'amazing', 'fantastic', 'brilliant', 'outstanding', 'couldn\'t be happier',
+    'extremely pleased', 'top notch', 'best decision', 'exceeded expectations'
   ]
-  const hasTestimonials = testimonialPatterns.some(p => typeof p === 'string' ? lowerBody.includes(p) : p) || /class=["'][^"']*testimonial/i.test(html) || /class=["'][^"']*review/i.test(html)
+  const hasTestimonialKeyword = testimonialKeywords.some(kw => lowerBody.includes(kw) || lowerHtml.includes(kw))
+  const hasTestimonialClass = /class=["'][^"']*(testimonial|review|feedback)/i.test(html)
+  const hasTestimonials = hasTestimonialKeyword || hasTestimonialClass
   
   const hasReviewWidgets = lowerHtml.includes('trustpilot') || lowerHtml.includes('google review') || lowerHtml.includes('yelp') || /<iframe[^>]+src=["'][^"']*(google|yelp|trustpilot|reviews)/i.test(html) || lowerHtml.includes('reviews.io')
-  const mentionsGoogle = lowerBody.includes('google') && (lowerBody.includes('review') || lowerBody.includes('rating') || lowerBody.includes('star'))
-  const mentionsYelp = lowerBody.includes('yelp')
-  const hasCaseStudies = lowerBody.includes('case stud') || lowerBody.includes('success stor')
-  const hasStarRatings = /class=["'][^"']*star/i.test(html) || /class=["'][^"']*rating/i.test(html) || bodyText.includes('★') || bodyText.includes('⭐') || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(bodyText)
+  const mentionsGoogle = (lowerBody.includes('google') || lowerHtml.includes('google')) && (lowerBody.includes('review') || lowerHtml.includes('review') || lowerBody.includes('rating') || lowerBody.includes('star'))
+  const mentionsYelp = lowerBody.includes('yelp') || lowerHtml.includes('yelp')
+  const hasCaseStudies = lowerBody.includes('case stud') || lowerBody.includes('success stor') || lowerHtml.includes('case stud')
+  const hasStarRatings = /class=["'][^"']*star/i.test(html) || /class=["'][^"']*rating/i.test(html) || bodyText.includes('★') || bodyText.includes('⭐') || html.includes('★') || html.includes('⭐') || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(bodyText) || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(html)
 
   const issues: string[] = []
   let score = 100
