@@ -175,17 +175,20 @@ function analyzeReviews(html: string, bodyText: string): ReviewScore {
     'loved working with', 'highly recommend', 'excellent service',
     'great experience', 'would recommend', 'very professional',
     'amazing', 'fantastic', 'brilliant', 'outstanding', 'couldn\'t be happier',
-    'extremely pleased', 'top notch', 'best decision', 'exceeded expectations'
+    'extremely pleased', 'top notch', 'best decision', 'exceeded expectations',
+    'review', 'reviews' // Standalone review mentions
   ]
   const hasTestimonialKeyword = testimonialKeywords.some(kw => lowerBody.includes(kw) || lowerHtml.includes(kw))
   const hasTestimonialClass = /class=["'][^"']*(testimonial|review|feedback)/i.test(html)
-  const hasTestimonials = hasTestimonialKeyword || hasTestimonialClass
   
   const hasReviewWidgets = lowerHtml.includes('trustpilot') || lowerHtml.includes('google review') || lowerHtml.includes('yelp') || /<iframe[^>]+src=["'][^"']*(google|yelp|trustpilot|reviews)/i.test(html) || lowerHtml.includes('reviews.io')
   const mentionsGoogle = (lowerBody.includes('google') || lowerHtml.includes('google')) && (lowerBody.includes('review') || lowerHtml.includes('review') || lowerBody.includes('rating') || lowerBody.includes('star'))
   const mentionsYelp = lowerBody.includes('yelp') || lowerHtml.includes('yelp')
   const hasCaseStudies = lowerBody.includes('case stud') || lowerBody.includes('success stor') || lowerHtml.includes('case stud')
   const hasStarRatings = /class=["'][^"']*star/i.test(html) || /class=["'][^"']*rating/i.test(html) || bodyText.includes('★') || bodyText.includes('⭐') || html.includes('★') || html.includes('⭐') || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(bodyText) || /[45]\.?\d?\s*\/?\s*5\s*(star|rating)/i.test(html)
+  
+  // Combine ALL forms of social proof - if they have ANY, they have testimonials
+  const hasTestimonials = hasTestimonialKeyword || hasTestimonialClass || hasReviewWidgets || hasCaseStudies || hasStarRatings
 
   const issues: string[] = []
   let score = 100
