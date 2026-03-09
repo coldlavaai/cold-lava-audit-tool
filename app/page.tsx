@@ -26,12 +26,17 @@ export default function Home() {
     setLoading(true)
     
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 45000) // 45 second timeout
+      
       const res = await fetch('/api/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: cleanUrl, email }),
+        signal: controller.signal,
       })
       
+      clearTimeout(timeoutId)
       const data = await res.json()
       
       if (!res.ok) {
@@ -42,7 +47,11 @@ export default function Home() {
       sessionStorage.setItem('auditResult', JSON.stringify(data))
       router.push('/audit')
     } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.')
+      if (err.name === 'AbortError') {
+        setError('Request timed out. The website might be slow to respond. Please try again.')
+      } else {
+        setError(err.message || 'Failed to analyze website. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
