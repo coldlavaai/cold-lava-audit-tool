@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import puppeteer from 'puppeteer'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 function generatePDFHTML(data: any): string {
   const scoreColor = (score: number) => score >= 80 ? '#22c55e' : score >= 60 ? '#eab308' : score >= 40 ? '#ff6b35' : '#dc2626'
@@ -133,19 +134,42 @@ function generatePDFHTML(data: any): string {
 }
 
 export async function POST(req: NextRequest) {
+  let browser
   try {
     const data = await req.json()
     const html = generatePDFHTML(data)
     
-    // Return HTML for now — can be converted to PDF client-side or via puppeteer
-    // For MVP, we'll serve it as downloadable HTML that prints beautifully
-    return new NextResponse(html, {
+    // Launch puppeteer and generate PDF
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
+    
+    const page = await browser.newPage()
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+    
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20px',
+        right: '20px',
+        bottom: '20px',
+        left: '20px',
+      },
+    })
+    
+    await browser.close()
+    
+    return new NextResponse(pdf, {
       headers: {
-        'Content-Type': 'text/html',
-        'Content-Disposition': `attachment; filename="cold-lava-audit-${data.businessName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.html"`,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="cold-lava-audit-${data.businessName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf"`,
       },
     })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to generate report' }, { status: 500 })
+    if (browser) await browser.close()
+    console.error('PDF generation error:', error)
+    return NextResponse.json({ error: 'Failed to generate PDF report' }, { status: 500 })
   }
 }
