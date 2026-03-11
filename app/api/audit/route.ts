@@ -522,11 +522,13 @@ function generateRecommendations(website: WebsiteScore, reviews: ReviewScore, tr
 }
 
 async function saveAuditForSEOAgent(result: AuditResult, email?: string): Promise<void> {
+  console.log('🔵 saveAuditForSEOAgent called for:', result.url)
   try {
     const domain = new URL(result.url).hostname.replace(/^www\./, '')
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const filename = `${domain}_${timestamp}.json`
     const filePath = `/home/moltbot/seoagent-bot/incoming-audits/${filename}`
+    console.log('🔵 Attempting to save to:', filePath)
     
     const auditData = {
       prospect: {
@@ -572,8 +574,13 @@ async function saveAuditForSEOAgent(result: AuditResult, email?: string): Promis
     
     await fs.writeFile(filePath, JSON.stringify(auditData, null, 2), 'utf-8')
     console.log(`✅ Audit saved for SEO Agent: ${filePath}`)
+    
+    // Verify file was written
+    const exists = await fs.access(filePath).then(() => true).catch(() => false)
+    console.log(`🔵 File exists after write: ${exists}`)
   } catch (error) {
-    console.error('Failed to save audit for SEO Agent:', error)
+    console.error('❌ Failed to save audit for SEO Agent:', error)
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack')
   }
 }
 
@@ -679,7 +686,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Save for SEO Agent
+    console.log('🟢 About to save audit for SEO Agent...', { url: result.url, email })
     await saveAuditForSEOAgent(result, email)
+    console.log('🟢 saveAuditForSEOAgent completed')
 
     return NextResponse.json(result)
   } catch (error: any) {
