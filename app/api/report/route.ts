@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
     
     await browser.close()
     
-    return new NextResponse(pdf, {
+    return new NextResponse(Buffer.from(pdf), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="cold-lava-audit-${data.businessName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf"`,
